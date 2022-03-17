@@ -64,6 +64,37 @@ module.exports = class Reader {
     this.pendingChunk = "";
   }
 
+  TwoPairsEqual(pair, other) {
+    return pair.start == other.start && pair.end == other.end;
+  }
+
+  setNumberOfUniqueCommands() {
+    let currentPairIndex = 0;
+    while (currentPairIndex < this.pairs.length) {
+      if (currentPairIndex < this.pairs.length - 1) {
+        if (
+          !this.TwoPairsEqual(
+            this.pairs[currentPairIndex],
+            this.pairs[currentPairIndex + 1]
+          )
+        ) {
+          this.uniqueCommands++;
+        }
+      } else {
+        if (
+          !this.TwoPairsEqual(
+            this.pairs[currentPairIndex],
+            this.pairs[currentPairIndex - 1]
+          )
+        ) {
+          this.uniqueCommands++;
+        }
+      }
+
+      currentPairIndex++;
+    }
+  }
+
   async read() {
     let occurences = [];
 
@@ -89,5 +120,7 @@ module.exports = class Reader {
         );
       }
     }
+    this.setNumberOfUniqueCommands();
+    return this.uniqueCommands;
   }
 };
