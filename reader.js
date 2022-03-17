@@ -22,10 +22,24 @@ module.exports = class Reader {
       occurences.push(occurence + lastOccurence);
       remainingString = remainingString.slice(occurence + 12);
     }
+
+    return [];
+  }
+
+  extractCommandsFromPendingChunk() {
+    let chunkString = this.pendingChunk.toString();
+    return chunkString
+      .split(this.DATE_RE)
+      .slice(1)
+      .map(command => {
+        let start = command.indexOf(" - ") + 3 ? command.indexOf(" - ") + 3 : 0;
+        let end = command.indexOf("(") ? command.indexOf("(") : command.length;
+        return command.slice(start, end);
+      });
   }
 
   processPendingChunk() {
-    console.log(this.pendingChunk.slice(0, 13));
+    console.log(this.extractCommandsFromPendingChunk());
     this.pendingChunk = "";
   }
 
