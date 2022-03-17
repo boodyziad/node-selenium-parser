@@ -1,13 +1,19 @@
 const fs = require("fs");
+const versions = require("./versions");
 
 module.exports = class Reader {
   CHUNK_SIZE = 1000;
   DATE_RE = /\d{2}:\d{2}:\d{2}\.\d{3}/g;
 
+  uniqueCommands = 0;
+  pairs = [];
+
   pendingChunk = "";
 
-  constructor(path) {
+  constructor(path, version) {
     this.path = path;
+    this.commandStartIdentifier = versions[version].commandStartIdentifier;
+    this.responseIdentifier = versions[version].responseIdentifier;
   }
 
   extractDateIndexes(chunk) {
@@ -35,11 +41,26 @@ module.exports = class Reader {
         let start = command.indexOf(" - ") + 3 ? command.indexOf(" - ") + 3 : 0;
         let end = command.indexOf("(") ? command.indexOf("(") : command.length;
         return command.slice(start, end);
-      });
+      })
+      .filter(
+        command =>
+          command.includes(this.commandStartIdentifier) ||
+          command.includes(this.responseIdentifier)
+      );
   }
 
   processPendingChunk() {
-    console.log(this.extractCommandsFromPendingChunk());
+    let commands = this.extractCommandsFromPendingChunk();
+    if (commands.length) {
+      commands.forEach(command => {
+        if (command.includes(this.commandStartIdentifier))
+          this.pairs.push({
+            start: command
+          });
+        else if (this.pairs.length && !this.pairs[this.pairs.length - 1].end)
+          this.pairs[this.pairs.length - 1].end = command;
+      });
+    }
     this.pendingChunk = "";
   }
 
