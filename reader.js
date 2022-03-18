@@ -76,7 +76,7 @@ module.exports = class Reader {
     return uniqueCommands;
   }
 
-  read() {
+  read(callback) {
     let occurences = [];
     let pairs = [];
     let pendingChunk = "";
@@ -122,7 +122,7 @@ module.exports = class Reader {
     });
 
     stream.on("close", () => {
-      console.log(Reader.getNumberOfUniqueCommands(pairs));
+      callback(Reader.getNumberOfUniqueCommands(pairs));
     });
   }
 };
