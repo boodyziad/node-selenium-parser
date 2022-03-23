@@ -121,6 +121,37 @@ module.exports = class Reader {
     return uniqueCommands;
   }
 
+  static parseDate(date) {
+    let parts = date.split(":").map(part => parseFloat(part));
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+
+  static calculateCommandDuration(command) {
+    if (!command.end) return 0;
+
+    let startDate = this.parseDate(command.start.date);
+    let endDate = this.parseDate(command.end.date);
+
+    return parseFloat((endDate - startDate).toFixed(3));
+  }
+
+  static calculateInsideTime(uniqueCommands) {
+    let insideTime = 0;
+    uniqueCommands.forEach(
+      command => (insideTime += this.calculateCommandDuration(command))
+    );
+    return insideTime.toFixed(3);
+  }
+
+  static calculateOutsideTime(pairs, insideTime) {
+    return (
+      this.calculateCommandDuration({
+        start: pairs[0].start,
+        end: pairs[pairs.length - 1].start
+      }) - insideTime
+    ).toFixed(3);
+  }
+
   read(callback) {
     let occurences = [];
     let pairs = [];
@@ -168,7 +199,18 @@ module.exports = class Reader {
 
     stream.on("close", () => {
       let uniquePairs = Reader.getUniqueCommands(pairs);
-      callback(uniquePairs.length);
+      let insideTime = Reader.calculateInsideTime(uniquePairs);
+      let perRequestInsideTime = (insideTime / uniquePairs.length).toFixed(3);
+      let outsideTime = Reader.calculateOutsideTime(pairs, insideTime);
+      let perRequestOutsideTime = (outsideTime / uniquePairs.length).toFixed(3);
+
+      callback({
+        numberOfUniqueCommands: uniquePairs.length,
+        insideTime: insideTime,
+        perRequestInsideTime: perRequestInsideTime,
+        outsideTime: outsideTime,
+        perRequestOutsideTime: perRequestOutsideTime
+      });
     });
   }
 };

@@ -8,8 +8,8 @@ if (!(args.length == 2)) {
 
 const Reader = require("./reader");
 let reader = new Reader(args[0], args[1]);
-reader.read(uniques => {
-  console.log(uniques);
+reader.read(output => {
+  console.log(output);
 
   // Storing logic goes here
 });
