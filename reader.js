@@ -30,19 +30,41 @@ module.exports = class Reader {
 
   static extractCommandsFromPendingChunk(pendingChunk, startId, endId) {
     let chunkString = pendingChunk.toString();
+    let dateOccurences = Reader.extractDateIndexes(chunkString);
+    let dates = [];
+    for (let i = 0; i < dateOccurences.length; i++) {
+      dates.push(chunkString.slice(dateOccurences[i], dateOccurences[i] + 12));
+    }
+
+    let currentDateIndex = -1;
+
     return chunkString
       .split(DATE_RE)
       .slice(1)
       .map(command => {
+        currentDateIndex++;
         let start = command.indexOf(" - ") + 3 ? command.indexOf(" - ") + 3 : 0;
         let end = command.indexOf("(") ? command.indexOf("(") : command.length;
-        return command.slice(start, end);
+        return {
+          command: command.slice(start, end),
+          date: dates[currentDateIndex]
+        };
       })
-      .filter(command => command.includes(startId) || command.includes(endId));
+      .filter(
+        command =>
+          command.command.includes(startId) || command.command.includes(endId)
+      );
   }
 
   static TwoPairsEqual(pair, other) {
-    return pair.start == other.start && pair.end == other.end;
+    return (
+      pair.start &&
+      pair.end &&
+      other.start &&
+      other.end &&
+      pair.start.command == other.start.command &&
+      pair.end.command == other.end.command
+    );
   }
 
   static getNumberOfUniqueCommands(pairs) {
@@ -92,12 +114,12 @@ module.exports = class Reader {
       );
       if (commands.length) {
         commands.forEach(command => {
-          if (command.includes(startId))
+          if (command.command.includes(startId))
             pairs.push({
               start: command
             });
           else if (pairs.length && !pairs[pairs.length - 1].end)
-            pairs[pairs.length - 1].end = command;
+            (pairs[pairs.length - 1].end = command), command;
         });
       }
       pendingChunk = "";
