@@ -58,6 +58,8 @@ module.exports = class Reader {
 
   static TwoPairsEqual(pair, other) {
     return (
+      pair &&
+      other &&
       pair.start &&
       pair.end &&
       other.start &&
@@ -67,9 +69,9 @@ module.exports = class Reader {
     );
   }
 
-  static getNumberOfUniqueCommands(pairs) {
+  static getUniqueCommands(pairs) {
     let currentPairIndex = 0;
-    let uniqueCommands = 0;
+    let uniqueCommands = [];
 
     while (currentPairIndex < pairs.length) {
       if (currentPairIndex < pairs.length - 1) {
@@ -79,7 +81,28 @@ module.exports = class Reader {
             pairs[currentPairIndex + 1]
           )
         ) {
-          uniqueCommands++;
+          if (
+            Reader.TwoPairsEqual(
+              pairs[currentPairIndex],
+              pairs[currentPairIndex - 1]
+            )
+          ) {
+            uniqueCommands[uniqueCommands.length - 1].end =
+              pairs[currentPairIndex].end;
+          } else {
+            uniqueCommands.push(pairs[currentPairIndex]);
+          }
+        } else {
+          if (
+            !Reader.TwoPairsEqual(
+              pairs[currentPairIndex],
+              pairs[currentPairIndex - 1]
+            )
+          ) {
+            uniqueCommands.push({
+              start: pairs[currentPairIndex].start
+            });
+          }
         }
       } else {
         if (
@@ -88,7 +111,7 @@ module.exports = class Reader {
             pairs[currentPairIndex - 1]
           )
         ) {
-          uniqueCommands++;
+          uniqueCommands.push(pairs[currentPairIndex]);
         }
       }
 
@@ -144,7 +167,8 @@ module.exports = class Reader {
     });
 
     stream.on("close", () => {
-      callback(Reader.getNumberOfUniqueCommands(pairs));
+      let uniquePairs = Reader.getUniqueCommands(pairs);
+      callback(uniquePairs.length);
     });
   }
 };
