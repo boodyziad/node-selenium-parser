@@ -14,5 +14,9 @@ module.exports = {
   "2.53.0": {
     commandStartIdentifier: "Handling: ",
     responseIdentifier: "Finished: "
+  },
+  raw: {
+    commandStartIdentifier: "REQUEST",
+    responseIdentifier: "RESPONSE"
   }
 };
